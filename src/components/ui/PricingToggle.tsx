@@ -66,29 +66,59 @@ export default function PricingToggle() {
       {/* Tab toggle */}
       <div className="flex justify-center mb-10">
         <div className="inline-flex rounded-lg border border-white/[0.07] bg-[#151515] p-1 gap-1">
-          {(['platform', 'engine'] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={cn(
-                'px-5 py-2 rounded-md text-sm font-medium transition-all capitalize',
-                tab === t
-                  ? 'bg-[#0c0c0c] text-[#f2f2f2] shadow-sm'
-                  : 'text-[#808080] hover:text-[#f2f2f2]'
-              )}
-            >
-              {t === 'platform' ? '🖥 Platform' : '💬 Engine'}
-            </button>
-          ))}
+          <button
+            onClick={() => setTab('platform')}
+            className={cn(
+              'px-5 py-2 rounded-md text-sm font-medium transition-all',
+              tab === 'platform'
+                ? 'bg-[#0c0c0c] text-[#f2f2f2] shadow-sm'
+                : 'text-[#808080] hover:text-[#f2f2f2]'
+            )}
+          >
+            🖥 Platform
+          </button>
+          <button
+            onClick={() => setTab('engine')}
+            className={cn(
+              'relative px-5 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2',
+              tab === 'engine'
+                ? 'bg-[#0c0c0c] text-[#f2f2f2] shadow-sm'
+                : 'text-[#808080] hover:text-[#f2f2f2]'
+            )}
+          >
+            💬 Engine
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#d4a843] border border-[#d4a843]/40 px-1.5 py-0.5 rounded-full">
+              Soon
+            </span>
+          </button>
         </div>
       </div>
 
       {/* Plans */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {plans.map((plan) => (
-          <PricingCard key={plan.name} plan={plan} />
-        ))}
-      </div>
+      {tab === 'platform' ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {plans.map((plan) => (
+            <PricingCard key={plan.name} plan={plan} />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-[#d4a843]/20 bg-[#151515] p-12 text-center">
+          <span className="inline-flex px-3 py-1 text-xs font-bold uppercase tracking-widest bg-[#d4a843]/10 border border-[#d4a843]/30 text-[#d4a843] rounded-full mb-4">
+            Coming Soon
+          </span>
+          <h3 className="text-xl font-semibold text-[#f2f2f2] mb-3">Engine pricing is on its way</h3>
+          <p className="text-[#808080] text-sm max-w-md mx-auto mb-6">
+            The Engine bot is in active development. Join the early access list and we&apos;ll notify
+            you the moment it launches — with a founding member discount.
+          </p>
+          <Link
+            href="/contactus"
+            className="inline-flex px-6 py-2.5 bg-[#d4a843] text-[#0c0c0c] font-semibold rounded-lg hover:bg-[#d4a843]/90 transition-colors text-sm"
+          >
+            Join early access
+          </Link>
+        </div>
+      )}
     </div>
   )
 }

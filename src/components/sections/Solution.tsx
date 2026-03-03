@@ -52,9 +52,13 @@ export default function Solution() {
             </div>
           </RevealWrapper>
 
-          {/* Engine */}
+          {/* Engine — Coming Soon */}
           <RevealWrapper delay={0.2}>
-            <div className="rounded-xl border border-[#d4a843]/20 bg-[#151515] p-8 flex flex-col gap-5 eng-glow">
+            <div className="relative rounded-xl border border-[#d4a843]/20 bg-[#151515] p-8 flex flex-col gap-5 overflow-hidden opacity-80">
+              {/* Coming Soon ribbon */}
+              <span className="absolute top-4 right-4 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-[#d4a843]/10 border border-[#d4a843]/30 text-[#d4a843] rounded-full">
+                Coming Soon
+              </span>
               <div className="w-12 h-12 rounded-xl bg-[#d4a843]/10 border border-[#d4a843]/20 flex items-center justify-center">
                 <MessageSquare className="w-6 h-6 text-[#d4a843]" />
               </div>
@@ -67,17 +71,17 @@ export default function Solution() {
               </div>
               <ul className="space-y-2">
                 {['Chat-first test triggering', 'AI diagnosis in thread', 'Smart anomaly alerts', 'Slack, Teams & Mattermost'].map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-sm text-[#cccccc]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#d4a843]" />
+                  <li key={f} className="flex items-center gap-2 text-sm text-[#808080]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#d4a843]/50" />
                     {f}
                   </li>
                 ))}
               </ul>
               <Link
-                href="/#engine"
-                className="mt-auto text-sm text-[#d4a843] hover:underline"
+                href="/contactus"
+                className="mt-auto text-sm text-[#d4a843]/70 hover:text-[#d4a843] transition-colors"
               >
-                Explore the Engine →
+                Get notified when it launches →
               </Link>
             </div>
           </RevealWrapper>

@@ -12,7 +12,21 @@ export default function Engine() {
   return (
     <section id="engine" className="section-padding bg-[#101010] border-y border-white/[0.07]">
       <div className="container-max">
-        <div className="grid lg:grid-cols-2 gap-14 items-start">
+        {/* Coming Soon banner */}
+        <div className="mb-10 flex items-center gap-3 px-5 py-3 rounded-xl border border-[#d4a843]/25 bg-[#d4a843]/[0.04]">
+          <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-[#d4a843]/10 border border-[#d4a843]/30 text-[#d4a843] rounded-full flex-shrink-0">
+            Coming Soon
+          </span>
+          <p className="text-sm text-[#808080]">
+            The Engine bot is in active development.{' '}
+            <Link href="/contactus" className="text-[#d4a843] hover:underline">
+              Join the early access list
+            </Link>{' '}
+            and be first to know when it launches.
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-14 items-start opacity-75">
           {/* Left */}
           <div>
             <RevealWrapper>
@@ -25,7 +39,7 @@ export default function Engine() {
                 <span className="font-serif italic text-[#d4a843]">inside your chat.</span>
               </h2>
               <p className="text-[#808080] mb-8 leading-relaxed">
-                The PerfMonk Engine bot turns Slack, Teams, and Mattermost into a performance
+                The PerfMonk Engine bot will turn Slack, Teams, and Mattermost into a performance
                 engineering hub. Trigger tests, get live updates, and interrogate results — all in
                 a thread.
               </p>
@@ -51,26 +65,26 @@ export default function Engine() {
             </div>
 
             <RevealWrapper delay={0.3}>
-              <div className="flex gap-4">
-                <Link
-                  href="/contactus?demo=true"
-                  className="px-5 py-2.5 bg-[#d4a843] text-[#0c0c0c] font-semibold rounded-lg hover:bg-[#d4a843]/90 transition-colors text-sm"
-                >
-                  Add to Slack
-                </Link>
-                <Link
-                  href="/pricing"
-                  className="px-5 py-2.5 border border-white/[0.11] text-[#f2f2f2] rounded-lg hover:bg-white/[0.07] transition-colors text-sm"
-                >
-                  Engine pricing
-                </Link>
-              </div>
+              <Link
+                href="/contactus"
+                className="inline-flex px-5 py-2.5 border border-[#d4a843]/30 text-[#d4a843] rounded-lg hover:bg-[#d4a843]/10 transition-colors text-sm font-medium"
+              >
+                Get early access →
+              </Link>
             </RevealWrapper>
           </div>
 
-          {/* Right — Slack mock */}
+          {/* Right — Slack mock preview */}
           <RevealWrapper delay={0.2}>
-            <SlackMock />
+            <div className="relative">
+              <SlackMock />
+              {/* Frosted overlay to indicate not-yet-live */}
+              <div className="absolute inset-0 rounded-xl bg-[#101010]/40 backdrop-blur-[1px] flex items-center justify-center">
+                <span className="px-4 py-2 rounded-full border border-[#d4a843]/40 bg-[#101010]/80 text-sm font-semibold text-[#d4a843]">
+                  Preview — Coming Soon
+                </span>
+              </div>
+            </div>
           </RevealWrapper>
         </div>
       </div>
