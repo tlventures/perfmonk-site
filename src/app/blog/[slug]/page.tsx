@@ -2,8 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 
+// Next.js 15: params is a Promise
 interface Props {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 const posts: Record<string, { title: string; date: string; readTime: string; tag: string; body: string }> = {
@@ -135,7 +136,8 @@ PerfMonk's AI analysis automatically identifies the cause of tail latency spikes
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const post = posts[params.slug]
+  const { slug } = await params
+  const post = posts[slug]
   if (!post) return { title: 'Post Not Found' }
   return {
     title: post.title,
@@ -143,8 +145,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default function BlogPost({ params }: Props) {
-  const post = posts[params.slug]
+export default async function BlogPost({ params }: Props) {
+  const { slug } = await params
+  const post = posts[slug]
 
   if (!post) {
     return (
@@ -157,7 +160,6 @@ export default function BlogPost({ params }: Props) {
     )
   }
 
-  // Parse simple markdown-like body
   const lines = post.body.trim().split('\n')
 
   return (
@@ -183,7 +185,7 @@ export default function BlogPost({ params }: Props) {
           </p>
         </div>
 
-        <div className="border-t border-white/[0.07] pt-8 prose-custom">
+        <div className="border-t border-white/[0.07] pt-8">
           {lines.map((line, i) => {
             if (line.startsWith('## ')) {
               return (
