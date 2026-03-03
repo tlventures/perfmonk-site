@@ -54,3 +54,37 @@ Set env vars in Vercel Dashboard → Project → Settings → Environment Variab
 
 ## Contact Email
 All contact links open `mailto:perfmonk@perfmonk.in` — no backend needed.
+
+---
+
+## Push to GitHub (run these from your terminal)
+
+```bash
+cd ~/startup/perfmonk/perfsite/frontend
+
+# 1. Create the repo on GitHub (requires gh CLI — install: https://cli.github.com)
+gh repo create perfmonk-site --public --description "PerfMonk marketing site"
+
+# 2. Set remote and push
+git remote add origin git@github.com:YOUR_USERNAME/perfmonk-site.git
+git push -u origin main
+```
+
+Or create manually on GitHub at https://github.com/new, then:
+```bash
+git remote add origin https://github.com/YOUR_USERNAME/perfmonk-site.git
+git push -u origin main
+```
+
+## Deploy to Vercel (after GitHub push)
+
+```bash
+npm i -g vercel
+vercel --prod
+```
+
+Or connect at https://vercel.com/new → Import Git Repository → Select your repo.
+
+Set these env vars in Vercel dashboard:
+- `NEXT_PUBLIC_SITE_URL` = `https://www.perfmonk.in`
+- `RESEND_API_KEY` = your Resend key (optional)
