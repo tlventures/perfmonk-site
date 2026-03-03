@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+
 import { platformPlans, enginePlans, type PricingPlan } from '@/lib/constants/pricing'
 import Link from 'next/link'
 import { Check } from 'lucide-react'
@@ -84,20 +84,11 @@ export default function PricingToggle() {
       </div>
 
       {/* Plans */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={tab}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.25 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
-        >
-          {plans.map((plan) => (
-            <PricingCard key={plan.name} plan={plan} />
-          ))}
-        </motion.div>
-      </AnimatePresence>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {plans.map((plan) => (
+          <PricingCard key={plan.name} plan={plan} />
+        ))}
+      </div>
     </div>
   )
 }

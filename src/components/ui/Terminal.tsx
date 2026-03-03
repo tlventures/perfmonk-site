@@ -61,7 +61,11 @@ export default function Terminal({ lines, speed = 320, className }: TerminalProp
   }, [lines, speed])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    // Scroll only the terminal's own container, not the page
+    if (bottomRef.current) {
+      const container = bottomRef.current.parentElement
+      if (container) container.scrollTop = container.scrollHeight
+    }
   }, [visible])
 
   useEffect(() => {
