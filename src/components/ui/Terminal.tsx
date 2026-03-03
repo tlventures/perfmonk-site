@@ -30,16 +30,20 @@ export default function Terminal({ lines, speed = 320, className }: TerminalProp
   useEffect(() => {
     let idx = 0
     let timeout: ReturnType<typeof setTimeout>
+    let cancelled = false
 
     const push = () => {
+      if (cancelled) return
       if (idx < lines.length) {
-        setVisible((prev) => [...prev, lines[idx]])
+        const line = lines[idx]
+        if (line) setVisible((prev) => [...prev, line])
         idx++
         const jitter = Math.random() * 120
         timeout = setTimeout(push, speed + jitter)
       } else {
         // Pause then restart
         timeout = setTimeout(() => {
+          if (cancelled) return
           setVisible([])
           idx = 0
           timeout = setTimeout(push, 400)
@@ -47,8 +51,13 @@ export default function Terminal({ lines, speed = 320, className }: TerminalProp
       }
     }
 
+    setVisible([])
+    idx = 0
     timeout = setTimeout(push, 600)
-    return () => clearTimeout(timeout)
+    return () => {
+      cancelled = true
+      clearTimeout(timeout)
+    }
   }, [lines, speed])
 
   useEffect(() => {
@@ -77,7 +86,7 @@ export default function Terminal({ lines, speed = 320, className }: TerminalProp
 
       {/* Body */}
       <div className="p-4 h-56 overflow-y-auto space-y-1 scrollbar-none">
-        {visible.map((line, i) => (
+        {visible.filter(Boolean).map((line, i) => (
           <div key={i} className={cn('whitespace-pre-wrap', clsStyles[line.cls] || 'text-[#f2f2f2]')}>
             {line.cls === 'cmd' && <span className="text-[#2dd4bf] select-none">$ </span>}
             {line.text}
