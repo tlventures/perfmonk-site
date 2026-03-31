@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
+import { appendToGoogleSheet } from '@/lib/google-sheets'
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,7 +36,15 @@ export async function POST(req: NextRequest) {
       console.warn('Supabase env vars not set — skipping DB save.')
     }
 
-    // ── 2. Send email via Resend ─────────────────────────────────────────
+    // ── 2. Append to Google Sheet ─────────────────────────────────────────
+    try {
+      await appendToGoogleSheet({ name, email, company, message, demo })
+    } catch (sheetErr) {
+      // Non-fatal — log and continue
+      console.error('Google Sheets append error:', sheetErr)
+    }
+
+    // ── 3. Send email via Resend ─────────────────────────────────────────
     const resendKey = process.env.RESEND_API_KEY
     if (!resendKey) {
       console.warn('RESEND_API_KEY not set — email not sent.')
