@@ -55,6 +55,7 @@ export default function ConsolePage() {
   const [target, setTarget] = useState('http://localhost:8080')
   const [prometheus, setPrometheus] = useState('http://localhost:9090')
   const [duration, setDuration] = useState('15s')
+  const [regions, setRegions] = useState('us-east-1')
   const [events, setEvents] = useState<Ev[]>([])
   const [runId, setRunId] = useState<string | null>(null)
   const [status, setStatus] = useState<string>('')
@@ -95,12 +96,18 @@ export default function ConsolePage() {
   const start = useCallback(async () => {
     const r = await fetch(`${API}/agentload/runs`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ nfr, plan, target, prometheus, params: { duration, reset: true } }),
+      body: JSON.stringify({
+        nfr, plan, target, prometheus,
+        params: {
+          duration, reset: true,
+          regions: regions.split(',').map((s) => s.trim()).filter(Boolean),
+        },
+      }),
     })
     const id = (await r.json()).run_id
     setRunId(id)
     streamRun(id)
-  }, [nfr, plan, target, prometheus, duration, streamRun])
+  }, [nfr, plan, target, prometheus, duration, regions, streamRun])
 
   const submitAnswers = useCallback(async () => {
     if (!runId) return
@@ -155,6 +162,10 @@ export default function ConsolePage() {
               <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="duration"
                 className="rounded-md border border-g3 bg-s1 p-2 text-xs text-white outline-none focus:border-teal" />
             </div>
+            <label className="block text-xs text-g2">Generate load from (AWS regions, comma-separated)</label>
+            <input value={regions} onChange={(e) => setRegions(e.target.value)}
+              placeholder="us-east-1, eu-west-1"
+              className="w-full rounded-md border border-g3 bg-s1 p-2 text-xs text-white outline-none focus:border-teal" />
             <button onClick={start} disabled={running}
               className="inline-flex items-center gap-2 rounded-md bg-teal px-4 py-2 text-sm font-medium text-bg disabled:opacity-50">
               {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
