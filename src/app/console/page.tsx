@@ -51,12 +51,15 @@ function StepRow({ ev }: { ev: Ev }) {
 
 export default function ConsolePage() {
   const [nfr, setNfr] = useState('product search must serve p95 < 300ms at 40 concurrent users')
+  const [plan, setPlan] = useState('')
   const [target, setTarget] = useState('http://localhost:8080')
   const [prometheus, setPrometheus] = useState('http://localhost:9090')
   const [duration, setDuration] = useState('15s')
   const [events, setEvents] = useState<Ev[]>([])
   const [runId, setRunId] = useState<string | null>(null)
   const [status, setStatus] = useState<string>('')
+  const [questions, setQuestions] = useState<string[]>([])
+  const [answers, setAnswers] = useState<Record<string, string>>({})
   const [history, setHistory] = useState<RunRow[]>([])
   const esRef = useRef<EventSource | null>(null)
 
@@ -81,6 +84,10 @@ export default function ConsolePage() {
       if (ev.step === '_end') { es.close(); setStatus(ev.status); loadHistory(); return }
       setEvents((prev) => [...prev, ev])
       if (ev.status === 'await_approval') setStatus('await_approval')
+      if (ev.step === 'clarify' && ev.status === 'needs_input') {
+        setQuestions(ev.data?.questions || [])
+        setStatus('needs_input')
+      }
     }
     es.onerror = () => { es.close() }
   }, [loadHistory])
@@ -88,12 +95,21 @@ export default function ConsolePage() {
   const start = useCallback(async () => {
     const r = await fetch(`${API}/agentload/runs`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ nfr, target, prometheus, params: { duration, reset: true } }),
+      body: JSON.stringify({ nfr, plan, target, prometheus, params: { duration, reset: true } }),
     })
     const id = (await r.json()).run_id
     setRunId(id)
     streamRun(id)
-  }, [nfr, target, prometheus, duration, streamRun])
+  }, [nfr, plan, target, prometheus, duration, streamRun])
+
+  const submitAnswers = useCallback(async () => {
+    if (!runId) return
+    setStatus('running'); setQuestions([])
+    await fetch(`${API}/agentload/runs/${runId}/answer`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ answers }),
+    })
+  }, [runId, answers])
 
   const decide = useCallback(async (decision: boolean) => {
     if (!runId) return
@@ -124,8 +140,12 @@ export default function ConsolePage() {
         {/* run form + stream */}
         <div>
           <div className="space-y-3 rounded-xl border border-g3 bg-bg2 p-4">
-            <label className="block text-xs text-g2">Requirement (NFR)</label>
-            <textarea value={nfr} onChange={(e) => setNfr(e.target.value)} rows={2}
+            <label className="block text-xs text-g2">Requirement / NFR (paste the full document — multi-line is fine)</label>
+            <textarea value={nfr} onChange={(e) => setNfr(e.target.value)} rows={4}
+              className="w-full rounded-md border border-g3 bg-s1 p-2 text-sm text-white outline-none focus:border-teal" />
+            <label className="block text-xs text-g2">Test plan / PRD (optional — journeys, data, workload)</label>
+            <textarea value={plan} onChange={(e) => setPlan(e.target.value)} rows={3}
+              placeholder="e.g. login → search → checkout; 200ms think-time; test data in orders.csv; peak 3000 rpm"
               className="w-full rounded-md border border-g3 bg-s1 p-2 text-sm text-white outline-none focus:border-teal" />
             <div className="grid grid-cols-3 gap-2">
               <input value={target} onChange={(e) => setTarget(e.target.value)} placeholder="target"
@@ -141,6 +161,24 @@ export default function ConsolePage() {
               Run closed loop
             </button>
           </div>
+
+          {status === 'needs_input' && questions.length > 0 && (
+            <div className="mt-4 rounded-xl border border-eng/40 bg-s1 p-4">
+              <div className="text-sm font-medium text-eng">Clarification needed before running</div>
+              <p className="mt-1 text-xs text-g2">The agent won&apos;t run blindly — answer what it needs first.</p>
+              <div className="mt-3 space-y-3">
+                {questions.map((q, i) => (
+                  <div key={i}>
+                    <label className="block text-xs text-g1">{q}</label>
+                    <input value={answers[q] || ''} onChange={(e) => setAnswers((a) => ({ ...a, [q]: e.target.value }))}
+                      className="mt-1 w-full rounded-md border border-g3 bg-bg2 p-2 text-sm text-white outline-none focus:border-teal" />
+                  </div>
+                ))}
+              </div>
+              <button onClick={submitAnswers}
+                className="mt-3 rounded-md bg-teal px-4 py-2 text-sm font-medium text-bg">Submit answers</button>
+            </div>
+          )}
 
           {status === 'await_approval' && (
             <div className="mt-4 flex items-center justify-between rounded-xl border border-eng/40 bg-s1 p-4">
