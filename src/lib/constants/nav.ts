@@ -3,6 +3,7 @@ export const navLinks = [
   { label: 'Engine', href: '/#engine' },
   { label: 'Integrations', href: '/#integrations' },
   { label: 'Pricing', href: '/pricing' },
+  { label: 'Console', href: '/console' },
   { label: 'Blog', href: '/blog' },
 ]
 
