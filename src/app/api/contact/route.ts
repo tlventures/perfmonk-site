@@ -1,7 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
-import { createClient } from '@supabase/supabase-js'
+import { initializeApp, getApps, cert } from 'firebase-admin/app'
+import { getFirestore } from 'firebase-admin/firestore'
 import { appendToGoogleSheet } from '@/lib/google-sheets'
+
+// ── Firestore admin init (once per lambda) ───────────────────────────────────
+// FIREBASE_SERVICE_ACCOUNT holds the service-account JSON (Firebase Console →
+// Project Settings → Service accounts → Generate new private key). Server-side
+// only — never exposed to the browser.
+function db() {
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT
+  if (!raw) return null
+  if (!getApps().length) {
+    initializeApp({ credential: cert(JSON.parse(raw)) })
+  }
+  return getFirestore()
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,32 +29,30 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // ── 1. Save to Supabase (server-side only — service role key never sent to browser) ──
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-    if (supabaseUrl && supabaseKey) {
-      const supabase = createClient(supabaseUrl, supabaseKey)
-      const { error: dbError } = await supabase.from('contact_submissions').insert({
-        name,
-        email,
-        company: company || null,
-        message,
-        is_demo: demo === true,
-      })
-      if (dbError) {
-        // Non-fatal — log and continue to send email
-        console.error('Supabase insert error:', dbError.message)
+    // ── 1. Save to Firestore (non-fatal — email is the primary alert) ──────────
+    try {
+      const store = db()
+      if (store) {
+        await store.collection('contact_submissions').add({
+          name,
+          email,
+          company: company || null,
+          message,
+          is_demo: demo === true,
+          created_at: new Date(),
+        })
+      } else {
+        console.warn('FIREBASE_SERVICE_ACCOUNT not set — skipping Firestore save.')
       }
-    } else {
-      console.warn('Supabase env vars not set — skipping DB save.')
+    } catch (dbErr) {
+      // Don't fail the request if storage hiccups — still send the email.
+      console.error('Firestore write error:', dbErr)
     }
 
-    // ── 2. Append to Google Sheet ─────────────────────────────────────────
+    // ── 2. Append to Google Sheet (non-fatal) ──────────────────────────────────
     try {
       await appendToGoogleSheet({ name, email, company, message, demo })
     } catch (sheetErr) {
-      // Non-fatal — log and continue
       console.error('Google Sheets append error:', sheetErr)
     }
 
@@ -48,12 +60,12 @@ export async function POST(req: NextRequest) {
     const resendKey = process.env.RESEND_API_KEY
     if (!resendKey) {
       console.warn('RESEND_API_KEY not set — email not sent.')
-      return NextResponse.json({ success: true, warn: 'Email not sent — API key missing.' })
+      return NextResponse.json({ error: 'Email is not configured.' }, { status: 500 })
     }
 
     const resend = new Resend(resendKey)
 
-    await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: 'PerfMonk Contact <noreply@perfmonk.in>',
       to: ['perfmonk@perfmonk.in'],
       replyTo: email,
@@ -75,7 +87,14 @@ export async function POST(req: NextRequest) {
       `,
     })
 
-    return NextResponse.json({ success: true })
+    // Resend does NOT throw on API errors — it returns { error }. Surface it so a
+    // misconfig can't masquerade as success (and you actually get your alert).
+    if (error) {
+      console.error('Resend error:', error)
+      return NextResponse.json({ error: 'Email could not be sent.' }, { status: 502 })
+    }
+
+    return NextResponse.json({ success: true, id: data?.id })
   } catch (err) {
     console.error('Contact route error:', err)
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 })
